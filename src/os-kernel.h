@@ -2,6 +2,7 @@ class Process
 {
 public:
     // 5 states of process
+    // 0   -1      2           3         4
     // NEW - READY - RUNNING - WAITING - TERMINATED
     int P_state;
     // process id
