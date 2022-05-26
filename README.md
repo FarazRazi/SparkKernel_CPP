@@ -185,14 +185,14 @@ Here, the meaning of CPU-bound processes means that they will never go for I/O w
 bound process will go for I/O multiple times in its execution. Each process will be blocked in I/O
 for 2 sec.
 
-[Processes1.txt](Processes1.txt)
+[Processes1.txt](src/Processes1.txt)
 
 In Processes1.txt sample file, two extra columns of CPU burst, and I/O interval is added.
 The first column indicates the total CPU burst the process/thread will require. Whereas the
 second column indicates the CPU burst time after which I/O bound process will go for an
 I/O (a positive value). For CPU bound processes, this value is -1 - indicating these processes will never go for I/O.
 
-[Processes2.txt](Processes2.txt)
+[Processes2.txt](src/Processes2.txt)
 
 In Processes2.txt sample file, there are no extra columns for CPU burst and I/O time. This
 means a more realistic scenario as a scheduler does not have advance knowledge of the
