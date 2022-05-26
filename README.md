@@ -33,6 +33,7 @@ Here are the **general requirements** for SparkKernel:
   - RUNNING - The process is currently executing on a CPU.
   - WAITING - The process has temporarily stopped executing and is waiting on an I/O request to complete.
   - TERMINATED - The process has completed.
+
     ![SparkKernelIMG](Process_Status.png)
 - Initialize processes and threads including their stack and related kernel data structures.
 - There is a field named state in the PCB, which must be updated with the current state of the process. “SparkKernel” will use this field to collect statistics
