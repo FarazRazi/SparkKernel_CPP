@@ -16,7 +16,7 @@ scheduler.
 In this project, you will implement a simple Multithreaded kernel “SparkKernel” with a
 scheduler. This kernel would be able to RUN simulated processes and threads. “SparkKernel”
 must be implemented using below code structure
-os-kernel.c - Code for the operating system kernel which calls CPU scheduler and other OS
+- os-kernel.c - Code for the operating system kernel which calls CPU scheduler and other OS
 features.
 
 - os-kernel.h - Header file for the operating system kernel.
