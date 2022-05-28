@@ -20,11 +20,13 @@ public:
         P_id = pid;
     }
 };
+
 class PCB
 {
 private:
     /* data */
 public:
+    int state;
     int process_id;
     string process_name;
     int process_priority;
@@ -32,6 +34,15 @@ public:
     char process_type;
     int process_cpu_time;
     int process_IO_time;
+    PCB ()
+    {
+        process_id=0;
+        process_name="";
+        process_priority=0;
+        process_arival_time=0;
+        process_cpu_time=0;
+        process_IO_time=0;
+    }
     PCB(int id,string name,int priority,int a_time,char type,int cpu_time,int io_time)
     {
         process_id=id;
@@ -50,7 +61,6 @@ private:
     /* data */
 public:
     SparkKernel(/* args */);
-    // The process is being created and has not yet begun executing.
     void newProcess()
     {
     }
