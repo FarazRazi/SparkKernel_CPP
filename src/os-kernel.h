@@ -1,4 +1,5 @@
 #include<string>
+#include<string.h>
 using namespace std;
 class Process
 {
@@ -34,6 +35,7 @@ public:
     char process_type;
     int process_cpu_time;
     int process_IO_time;
+
     PCB ()
     {
         process_id=0;
@@ -60,8 +62,78 @@ class SparkKernel
 private:
     /* data */
 public:
-    SparkKernel(/* args */);
-    void newProcess()
+    PCB *pcb_array;
+    int no_of_processes;
+    SparkKernel()
     {
+        pcb_array=NULL;
+        no_of_processes=0;
     }
+    void newProcess(){
+        
+    }
+
+  
+    void count_no_of_processes(string inputfile)
+    {
+        ifstream file(inputfile);
+        string line="";
+        getline(file,line);
+        while(getline(file,line))
+        {
+            no_of_processes++;
+        }
+        file.close();
+    }
+    
+    void file_handling(string inputfile)
+    {
+        count_no_of_processes(inputfile);
+        pcb_array = new PCB[no_of_processes];
+
+        ifstream file(inputfile);
+        string line="",str="";
+        char chr;
+        int k=0,p=0;
+        getline(file,line);
+        while(!file.eof())
+        {
+            
+           file >> pcb_array[k].process_name;
+           file >> str;
+           p=stoi(str);
+           pcb_array[k].process_priority=p;
+           file >> str;
+           p=stoi(str);
+           pcb_array[k].process_arival_time=p;
+           file >> str;
+           pcb_array[k].process_type=str[0];
+           file >> str;
+           p=stoi(str);
+           pcb_array[k].process_cpu_time=p;
+           file >> str;
+           p=stoi(str);
+           pcb_array[k].process_IO_time=p;
+            k++;
+
+           
+        }  
+        
+    }
+
+    void show_pcb()
+    {
+        for(int i=0;i<no_of_processes;i++)
+        {
+            cout<<pcb_array[i].process_name<<"\t";
+            cout<<pcb_array[i].process_priority<<"\t";
+            cout<<pcb_array[i].process_arival_time<<"\t";
+            cout<<pcb_array[i].process_type<<"\t";
+            cout<<pcb_array[i].process_cpu_time<<"\t";
+            cout<<pcb_array[i].process_IO_time<<"\n";
+        }
+    }
+
+
+
 };
