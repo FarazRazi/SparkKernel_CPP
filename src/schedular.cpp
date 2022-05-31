@@ -1,5 +1,6 @@
 #include <iostream>
 #include "scheduler.h"
+
 using namespace std;
 
 void Scheduler()
@@ -7,11 +8,8 @@ void Scheduler()
     cout << "Hello World" << endl;
 }
 
-void *start(void *argc)
-{
-    
-    int n = (int)(uintptr_t)argc;
-    cout << "Thread #" << n + 1 << " Running" << endl;
-    // Scheduler();
-    pthread_exit(0);
-}
+// void idle(unsigned int cpu_id);
+// void wake_up(PCB *process);
+// void preempt(unsigned int cpu_id);
+// void yield(unsigned int cpu_id);
+// void terminate(unsigned int cpu_id);

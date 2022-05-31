@@ -31,9 +31,9 @@ public:
     int process_id;
     string process_name;
     int process_priority;
-    int process_arival_time;
+    float process_arival_time;
     char process_type;
-    int process_cpu_time;
+    float process_cpu_time;
     int process_IO_time;
 
     PCB()
@@ -41,8 +41,8 @@ public:
         process_id = 0;
         process_name = "";
         process_priority = 0;
-        process_arival_time = 0;
-        process_cpu_time = 0;
+        process_arival_time = 0.0;
+        process_cpu_time = 0.0;
         process_IO_time = 0;
     }
     PCB(int id, string name, int priority, int a_time, char type, int cpu_time, int io_time)
@@ -69,7 +69,7 @@ public:
         pcb_array = NULL;
         no_of_processes = 0;
     }
-    
+
     void count_no_of_processes(string inputfile)
     {
         ifstream file(inputfile);
