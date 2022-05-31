@@ -16,6 +16,7 @@ using namespace std;
 int total_cpus=0,timeslice=0;
 
 int *cpus_array;
+int *executing_array;
 
 
 
@@ -41,6 +42,7 @@ int main(int argc, char *argv[])
 
     pthread_t tid_array[total_cpus];
     cpus_array= new int[total_cpus];
+    executing_array= new int[total_cpus];
     
     for(int i=0;i<total_cpus;i++)
     {
