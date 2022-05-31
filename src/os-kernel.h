@@ -69,10 +69,7 @@ public:
         pcb_array = NULL;
         no_of_processes = 0;
     }
-    void newProcess()
-    {
-    }
-
+    
     void count_no_of_processes(string inputfile)
     {
         ifstream file(inputfile);
