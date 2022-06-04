@@ -36,6 +36,8 @@ SparkKernel Kernel;
 queue<PCB> ReadyQueue;
 // Running Processes
 PCB **currentProcesses;
+// IO queue
+queue<PCB> ioQueue;
 
 char algo_name;
 int simulatorTime = 0;
@@ -51,6 +53,9 @@ void thread_Controller();
 void simulate_cpus();
 void simulateProcess(int i, PCB *cProc);
 void simulateProcCreat();
+void startIO(PCB *c_Proc);
+void simulateIO();
+void preemptForce(int cpu_id);
 void safe_usleep(long us);
 void print_gantt_header();
 void print_gantt_line();
@@ -61,7 +66,6 @@ void wake_up(PCB *process);
 void preempt(int cpu_id);
 void yield(int cpu_id);
 void terminate(int cpu_id);
-
 void schedular(int i);
 
 class CPU
@@ -179,6 +183,7 @@ void _start(int n)
     // addTerminate();
     pthread_exit(0);
 }
+
 // For passing int
 void *start(void *argc)
 {
@@ -247,7 +252,8 @@ void thread_Controller()
         print_gantt_line();
         // simulate cpus
         simulate_cpus();
-        // simulate i/o
+        // simulate I/O
+        simulateIO();
         // simulate waiting-Process create
         simulateProcCreat();
         // increase Timer
@@ -262,7 +268,8 @@ void print_gantt_header()
     cout << "Time  Ru Re Wa     ";
     for (n = 0; n < total_cpus; n++)
         cout << " CPU " << n << "    ";
-    cout << "\t";
+
+    cout << "IO Queue\n";
 }
 void print_gantt_line()
 {
@@ -303,26 +310,36 @@ void print_gantt_line()
     pthread_mutex_unlock(&mutex);
 
     /* Print time */
-    cout << simulatorTime / 10.0 << "\t" << current_running << " " << current_ready << " " << current_waiting;
+    cout << simulatorTime / 10.0 << "\t" << current_running << " " << current_ready << " " << current_waiting << "  ";
 
     /* Print running processes */
     for (n = 0; n < total_cpus; n++)
     {
         if (cpus_array[n].currentProcess != NULL)
-            cout << "\t" << cpus_array[n].currentProcess->process_name;
+            cout << "\t" << cpus_array[n].currentProcess->process_name << "  ";
         else
             cout << "\t(IDLE)  ";
     }
-    cout << "\n";
     /* Print I/O requests */
-    // printf("     <");
-    // r = io_queue_head;
-    // while (r != NULL)
-    // {
-    //     printf(" %s", r->pcb->name);
-    //     r = r->next;
-    // }
-    // printf(" <\n");
+
+    cout << "     <";
+    queue<PCB> temp;
+    if (ioQueue.empty())
+    {
+        cout << " no IO";
+    }
+    while (!ioQueue.empty())
+    {
+        cout << " " << ioQueue.front().process_name;
+        temp.push(ioQueue.front());
+        ioQueue.pop();
+    }
+    cout << " <\n";
+    while (!temp.empty())
+    {
+        ioQueue.push(temp.front());
+        temp.pop();
+    }
 }
 void simulate_cpus()
 {
@@ -354,23 +371,24 @@ void simulateProcess(int i, PCB *cProc)
     }
     else
     {
-        cout << "here" << endl;
-        cpus_array[i].state = 5;
-        pthread_cond_signal(&cpus_array[i].wakeup);
+        if (process_type = 'I' && cProc->process_IO_count > 0) // needs I/O
+        {
+            // submit for I/O
+            startIO(cProc);
+            // yield call on CPU
+            cpus_array[i].state = 4;
+            pthread_cond_signal(&cpus_array[i].wakeup);
 
-        pthread_cond_wait(&cpus_array[i].wakeup, &mutexSimulator);
+            pthread_cond_wait(&cpus_array[i].wakeup, &mutexSimulator);
+        }
+        else
+        {
+            cpus_array[i].state = 5;
+            pthread_cond_signal(&cpus_array[i].wakeup);
+
+            pthread_cond_wait(&cpus_array[i].wakeup, &mutexSimulator);
+        }
     }
-    // if (process_type = 'I') // needs I/O
-    // {
-    //     // submit for I/O
-    //     // submitIO(cProc, cProc->process_IO_time);
-
-    //     // yield call on CPU
-    //     cpus_array[i].state = 4;
-    //     pthread_cond_signal(&cpus_array[i].wakeup);
-
-    //     pthread_cond_wait(&cpus_array[i].wakeup, &mutexSimulator);
-    // }
 
     // Running
     //  burst check
@@ -381,10 +399,54 @@ void simulateProcess(int i, PCB *cProc)
     // Terminate
 }
 
+void startIO(PCB *c_Proc)
+{
+    // set time 2 seconds
+    c_Proc->process_IO_time = 20;
+    // add to IO queue
+    ioQueue.push(*c_Proc);
+}
+void simulateIO()
+{
+
+    if (ioQueue.empty())
+        return;
+    if (ioQueue.front().process_IO_time-- <= 0)
+    {
+        if (ioQueue.front().process_IO_count-- <= 0)
+        {
+            // cout << ioQueue.front().process_IO_time << "\n";
+            // remove process from IO queue
+            PCB *current;
+            current = &ioQueue.front();
+            ioQueue.pop();
+            // move process to readyqueue
+            pthread_mutex_unlock(&mutexSimulator);
+            // LOCK WRITER
+            pthread_mutex_lock(&mutex);
+            writers++;
+            pthread_mutex_unlock(&mutex);
+
+            // wakeup
+            wake_up(current);
+
+            // UNLOCK WRITER
+            pthread_mutex_lock(&mutex);
+            writers--;
+            if (writers == 0)
+            {
+                pthread_cond_signal(&no_writers);
+            }
+            pthread_mutex_unlock(&mutex);
+            pthread_mutex_lock(&mutexSimulator);
+        }
+    }
+}
+
 // this function wakeUp Processes
 void simulateProcCreat()
 {
-    if (processCreated < Kernel.no_of_processes && Kernel.pcb_array[processCreated].process_arival_time <= simulatorTime / 10.0)
+    if (processCreated < Kernel.no_of_processes && Kernel.pcb_array[processCreated].process_arival_time - 0.1 <= simulatorTime / 10.0)
     {
         pthread_mutex_unlock(&mutexSimulator);
         wake_up(&Kernel.pcb_array[processCreated]);
@@ -445,6 +507,30 @@ void safe_usleep(long us)
     while (nanosleep(&ts, &ts) != 0)
         ;
 }
+void preemptForce(int cpu_id)
+{
+
+    pthread_mutex_lock(&mutex);
+    writers++;
+    pthread_mutex_unlock(&mutex);
+    pthread_mutex_lock(&mutexSimulator);
+
+    // RUNNING
+    if (cpus_array[cpu_id].state == 2)
+    {
+        // PREMPT
+        cpus_array[cpu_id].state = 3;
+        pthread_cond_signal(&cpus_array[cpu_id].wakeup);
+        pthread_cond_wait(&cpus_array[cpu_id].wakeup, &mutexSimulator);
+    }
+
+    pthread_mutex_unlock(&mutexSimulator);
+    pthread_mutex_lock(&mutex);
+    writers--;
+    if (writers == 0)
+        pthread_cond_signal(&no_writers);
+    pthread_mutex_unlock(&mutex);
+}
 void context_switch(int i, PCB *cProc, int pTime)
 {
     // assert(i < total_cpus);
@@ -459,7 +545,6 @@ void context_switch(int i, PCB *cProc, int pTime)
     pthread_mutex_lock(&mutexSimulator);
 
     cpus_array[i].currentProcess = cProc;
-
     cpus_array[i].preemptionTimer = pTime;
 
     pthread_mutex_unlock(&mutexSimulator);
@@ -470,6 +555,20 @@ void context_switch(int i, PCB *cProc, int pTime)
         pthread_cond_signal(&no_writers);
     pthread_mutex_unlock(&mutex);
 }
+void selectionSort(PCB a[], int n)
+{
+    int i, j, max, temp;
+    for (i = 0; i < n - 1; i++)
+    {
+        max = i;
+        for (j = i + 1; j < n; j++)
+            if (a[j].process_priority > a[max].process_priority)
+                max = j;
+        temp = a[i].process_priority;
+        a[i].process_priority = a[max].process_priority;
+        a[max].process_priority = temp;
+    }
+}
 void schedular(int i)
 {
     PCB *curr = NULL;
@@ -479,12 +578,20 @@ void schedular(int i)
         if (algo_name == 'p')
         {
             // For priority algo change ready Queue
+            PCB tempArr[Kernel.no_of_processes];
+            for (int i = 0; i < Kernel.no_of_processes && !ReadyQueue.empty(); i++)
+            {
+                tempArr[i] = ReadyQueue.front();
+                ReadyQueue.pop();
+            }
+            selectionSort(tempArr, Kernel.no_of_processes);
+            for (int i = 0; i < Kernel.no_of_processes; i++)
+            {
+                ReadyQueue.push(tempArr[i]);
+            }
         }
-        else
-        {
-            curr = &ReadyQueue.front();
-            ReadyQueue.pop();
-        }
+        curr = &ReadyQueue.front();
+        ReadyQueue.pop();
         // set state ready
         curr->state = 3;
     }
@@ -508,6 +615,33 @@ void wake_up(PCB *process)
     pthread_cond_signal(&mutexReadyAdded);
     pthread_mutex_unlock(&mutexReady);
     // for priority based set accordingly
+    if (algo_name == 'p')
+    {
+        bool idleCPU = false;
+        int lowestPriority = process->process_priority;
+        int cpuID = 0;
+        ;
+        pthread_mutex_lock(&mutexCurrent);
+        for (int i = 0; i < total_cpus; i++)
+        {
+            if (currentProcesses[i] == NULL)
+            {
+                idleCPU = true;
+                break;
+            }
+            else if (currentProcesses[i]->process_priority < lowestPriority)
+            {
+                lowestPriority = currentProcesses[i]->process_priority;
+                cpuID = i;
+            }
+        }
+        pthread_mutex_unlock(&mutexCurrent);
+        if (!idleCPU || lowestPriority == process->process_priority)
+        {
+            cout << "Forced Preempt cpu: " << cpuID << endl;
+            preemptForce(cpuID);
+        }
+    }
 }
 void idle(int i)
 {

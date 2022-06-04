@@ -35,6 +35,7 @@ public:
     char process_type;
     float process_cpu_time;
     int process_IO_time;
+    int process_IO_count;
 
     PCB()
     {
@@ -43,7 +44,7 @@ public:
         process_priority = 0;
         process_arival_time = 0.0;
         process_cpu_time = 0.0;
-        process_IO_time = 0;
+        process_IO_count = 0;
     }
     PCB(int id, string name, int priority, int a_time, char type, int cpu_time, int io_time)
     {
@@ -53,7 +54,7 @@ public:
         process_arival_time = a_time;
         process_type = type;
         process_cpu_time = cpu_time;
-        process_IO_time = io_time;
+        process_IO_count = io_time;
     }
 };
 
@@ -109,7 +110,7 @@ public:
             pcb_array[k].process_cpu_time = p;
             file >> str;
             p = stoi(str);
-            pcb_array[k].process_IO_time = p;
+            pcb_array[k].process_IO_count = p;
             k++;
         }
     }
@@ -127,7 +128,7 @@ public:
             cout << pcb_array[i].process_arival_time << "\t\t";
             cout << pcb_array[i].process_type << "\t\t";
             cout << pcb_array[i].process_cpu_time << "\t\t";
-            cout << pcb_array[i].process_IO_time << "\n";
+            cout << pcb_array[i].process_IO_count << "\n";
         }
     }
 };
