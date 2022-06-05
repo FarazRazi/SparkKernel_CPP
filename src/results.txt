@@ -78,3 +78,11 @@ Total execution time: 51.2
 Total time spent in WAITING state: 289.7
 Total time spent in READY state: 28.5
 --------------------------------------------------
+
+--------------------------------------------------
+algo: f CPU: 4
+# of Context Switches: 29
+Total execution time: 13
+Total time spent in WAITING state: 21.3
+Total time spent in READY state: 0.2
+--------------------------------------------------

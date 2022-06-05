@@ -120,6 +120,36 @@ public:
             k++;
         }
     }
+    void file_handling_rand(string inputFile)
+    {
+        count_no_of_processes(inputFile);
+        pcb_array = new PCB[no_of_processes];
+        srand(time(NULL));
+        ifstream file(inputFile);
+        string line = "", str = "";
+        char chr;
+        int k = 0, p = 0;
+        getline(file, line);
+        while (!file.eof())
+        {
+
+            file >> pcb_array[k].process_name;
+            file >> str;
+            p = stoi(str);
+            pcb_array[k].process_priority = p;
+            file >> str;
+            p = stoi(str);
+            pcb_array[k].process_arival_time = p;
+            file >> str;
+            pcb_array[k].process_type = str[0];
+            pcb_array[k].process_cpu_time = rand() % 10 + 1;
+            pcb_array[k].process_IO_count = rand() % 5 + 1;
+            pcb_array[k].process_fixed_time = pcb_array[k].process_cpu_time;
+            if (pcb_array[k].process_type == 'I')
+                setIOTimes(pcb_array[k]);
+            k++;
+        }
+    }
     void setIOTimes(PCB &pcb)
     {
         srand(time(NULL));

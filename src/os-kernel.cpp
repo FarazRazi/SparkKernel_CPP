@@ -486,8 +486,25 @@ int main(int argc, char *argv[])
         algo_name = ch[0];
         outputfile = argv[4];
     }
+    int n;
+    cout << "Input 1 for cpu time from file" << endl;
+    cout << "Input 2 for random" << endl;
+    cin >> n;
+    if (n == 1)
+    {
+        Kernel.file_handling(inputfile);
+        cout << "reading end" << endl;
+    }
+    else if (n == 2)
+    {
+        Kernel.file_handling_rand(inputfile);
+        cout << "reading end" << endl;
+    }
+    else
+    {
+        exit(-1);
+    }
 
-    Kernel.file_handling(inputfile);
     //  Kernel.show_pcb();
 
     pthread_mutex_init(&mutexReady, NULL);
@@ -535,8 +552,6 @@ void preemptForce(int cpu_id)
 }
 void context_switch(int i, PCB *cProc, int pTime)
 {
-    // assert(i < total_cpus);
-    //   assert(cProc == NULL || (cProc >= Kernel.pcb_array && cProc <= Kernel.pcb_array + Kernel.no_of_processes - 1));
 
     contextCounts++;
 
