@@ -479,10 +479,20 @@ void simulateProcCreat()
 
 int main(int argc, char *argv[])
 {
-    string inputfile = argv[1], outputfile = argv[5], ch = argv[3];
-    algo_name = ch[0];
+    string outputfile;
+    string inputfile = argv[1], ch = argv[3];
     total_cpus = stoi(argv[2]);
-    timeslice = stoi(argv[4]);
+    if (ch[0] == 'r')
+    {
+        algo_name = 'r';
+        timeslice = stoi(argv[4]);
+        outputfile = argv[5];
+    }
+    else
+    {
+        algo_name = ch[0];
+        outputfile = argv[4];
+    }
 
     Kernel.file_handling(inputfile);
     // initialize_ready();
