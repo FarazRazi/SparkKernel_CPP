@@ -143,10 +143,13 @@ public:
             file >> str;
             pcb_array[k].process_type = str[0];
             pcb_array[k].process_cpu_time = rand() % 10 + 1;
-            pcb_array[k].process_IO_count = rand() % 5 + 1;
+            pcb_array[k].process_IO_count = -1;
             pcb_array[k].process_fixed_time = pcb_array[k].process_cpu_time;
             if (pcb_array[k].process_type == 'I')
+            {
+                pcb_array[k].process_IO_count = rand() % 5 + 1;
                 setIOTimes(pcb_array[k]);
+            }
             k++;
         }
     }
