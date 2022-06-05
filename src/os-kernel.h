@@ -36,6 +36,8 @@ public:
     float process_cpu_time;
     int process_IO_time;
     int process_IO_count;
+    int *process_IO_stamps;
+    int process_fixed_time;
 
     PCB()
     {
@@ -111,8 +113,43 @@ public:
             file >> str;
             p = stoi(str);
             pcb_array[k].process_IO_count = p;
+            pcb_array[k].process_fixed_time = pcb_array[k].process_cpu_time;
+            if (pcb_array[k].process_type == 'I')
+                setIOTimes(pcb_array[k]);
+
             k++;
         }
+    }
+    void setIOTimes(PCB &pcb)
+    {
+        srand(time(NULL));
+        const int n = pcb.process_IO_count;
+        int n2;
+        pcb.process_IO_stamps = new int[n];
+
+        for (int i = 0; i < n; i++)
+        {
+            n2 = pcb.process_cpu_time;
+            n2 = rand() % n2 + 1;
+            pcb.process_IO_stamps[i] = n2;
+        }
+        int i, j, min, temp;
+        for (i = 0; i < n - 1; i++)
+        {
+            min = i;
+            for (j = i + 1; j < n; j++)
+                if (pcb.process_IO_stamps[j] > pcb.process_IO_stamps[min])
+                    min = j;
+            temp = pcb.process_IO_stamps[i];
+            pcb.process_IO_stamps[i] = pcb.process_IO_stamps[min];
+            pcb.process_IO_stamps[min] = temp;
+        }
+
+        for (int i = 0; i < n; i++)
+        {
+            cout << pcb.process_IO_stamps[i] << " ";
+        }
+        cout << "\n";
     }
 
     void show_pcb()

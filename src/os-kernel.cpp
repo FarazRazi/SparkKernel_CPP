@@ -33,11 +33,11 @@ pthread_cond_t mutexReadyAdded;
 // Kernel
 SparkKernel Kernel;
 // Queues
-queue<PCB> ReadyQueue;
+queue<PCB *> ReadyQueue;
 // Running Processes
 PCB **currentProcesses;
 // IO queue
-queue<PCB> ioQueue;
+queue<PCB *> ioQueue;
 
 char algo_name;
 int simulatorTime = 0;
@@ -59,6 +59,7 @@ void preemptForce(int cpu_id);
 void safe_usleep(long us);
 void print_gantt_header();
 void print_gantt_line();
+void printFinal();
 
 // Scheduler Functions
 void idle(int cpu_id);
@@ -243,9 +244,8 @@ void thread_Controller()
         // Exit when all Process end
         if (processTerminated == Kernel.no_of_processes)
         {
-            // printFinal();
+            printFinal();
             cout << "\nProgam ENDED\n";
-            cout << contextCounts << endl;
             exit(0);
         }
         // print processes
@@ -265,11 +265,11 @@ void thread_Controller()
 void print_gantt_header()
 {
     int n;
-    cout << "Time  Ru Re Wa     ";
+    cout << "Time   Ru Re Wa  ";
     for (n = 0; n < total_cpus; n++)
-        cout << " CPU " << n << "    ";
+        cout << "CPU " << n << "  ";
 
-    cout << "IO Queue\n";
+    cout << "\t   IO Queue\n";
 }
 void print_gantt_line()
 {
@@ -310,27 +310,27 @@ void print_gantt_line()
     pthread_mutex_unlock(&mutex);
 
     /* Print time */
-    cout << simulatorTime / 10.0 << "\t" << current_running << " " << current_ready << " " << current_waiting << "  ";
+    cout << simulatorTime / 10.0 << "     " << current_running << "  " << current_ready << "  " << current_waiting;
 
     /* Print running processes */
     for (n = 0; n < total_cpus; n++)
     {
         if (cpus_array[n].currentProcess != NULL)
-            cout << "\t" << cpus_array[n].currentProcess->process_name << "  ";
+            cout << "  " << cpus_array[n].currentProcess->process_name << "  ";
         else
-            cout << "\t(IDLE)  ";
+            cout << "  (IDLE)  ";
     }
     /* Print I/O requests */
 
     cout << "     <";
-    queue<PCB> temp;
+    queue<PCB *> temp;
     if (ioQueue.empty())
     {
         cout << " no IO";
     }
     while (!ioQueue.empty())
     {
-        cout << " " << ioQueue.front().process_name;
+        cout << " " << ioQueue.front()->process_name;
         temp.push(ioQueue.front());
         ioQueue.pop();
     }
@@ -355,23 +355,16 @@ void simulateProcess(int i, PCB *cProc)
     // cProc - PCB - state
     char process_type = cProc->process_type;
     float time = cProc->process_cpu_time;
-
+    // float t2 = simulatorTime - cProc->process_arival_time * 10;
     if (time > 0) // needs to run
     {
         time--;
         cProc->process_cpu_time = time;
         // For stopping a process
         cpus_array[i].preemptionTimer--;
-        if (cpus_array[i].preemptionTimer == 0)
-        {
-            cpus_array[i].state = 3;
-            pthread_cond_signal(&cpus_array[i].wakeup);
-            pthread_cond_wait(&cpus_array[i].wakeup, &mutexSimulator);
-        }
-    }
-    else
-    {
-        if (process_type = 'I' && cProc->process_IO_count > 0) // needs I/O
+        // cout << t2 << endl;
+
+        if (process_type = 'I' && cProc->process_IO_count > 0 && cProc->process_IO_stamps[cProc->process_IO_count - 1] == cProc->process_fixed_time - cProc->process_cpu_time)
         {
             // submit for I/O
             startIO(cProc);
@@ -381,13 +374,20 @@ void simulateProcess(int i, PCB *cProc)
 
             pthread_cond_wait(&cpus_array[i].wakeup, &mutexSimulator);
         }
-        else
+        if (cpus_array[i].preemptionTimer == 0)
         {
-            cpus_array[i].state = 5;
+            cpus_array[i].state = 3;
             pthread_cond_signal(&cpus_array[i].wakeup);
-
             pthread_cond_wait(&cpus_array[i].wakeup, &mutexSimulator);
         }
+    }
+    else
+    {
+
+        cpus_array[i].state = 5;
+        pthread_cond_signal(&cpus_array[i].wakeup);
+
+        pthread_cond_wait(&cpus_array[i].wakeup, &mutexSimulator);
     }
 
     // Running
@@ -398,27 +398,26 @@ void simulateProcess(int i, PCB *cProc)
     // wait for I/O
     // Terminate
 }
-
 void startIO(PCB *c_Proc)
 {
     // set time 2 seconds
     c_Proc->process_IO_time = 20;
     // add to IO queue
-    ioQueue.push(*c_Proc);
+    ioQueue.push(c_Proc);
 }
 void simulateIO()
 {
-
     if (ioQueue.empty())
         return;
-    if (ioQueue.front().process_IO_time-- <= 0)
+    if (ioQueue.front()->process_IO_count > 0)
     {
-        if (ioQueue.front().process_IO_count-- <= 0)
+        if (ioQueue.front()->process_IO_time-- <= 0)
         {
             // cout << ioQueue.front().process_IO_time << "\n";
             // remove process from IO queue
             PCB *current;
-            current = &ioQueue.front();
+            current = ioQueue.front();
+            ioQueue.front()->process_IO_count--;
             ioQueue.pop();
             // move process to readyqueue
             pthread_mutex_unlock(&mutexSimulator);
@@ -442,7 +441,6 @@ void simulateIO()
         }
     }
 }
-
 // this function wakeUp Processes
 void simulateProcCreat()
 {
@@ -454,29 +452,14 @@ void simulateProcCreat()
         processCreated++;
     }
 }
-
-// void initialize_ready()
-// {
-
-//     auto start_time = high_resolution_clock::now();
-//     for (int i = 0; i < Kernel.no_of_processes; i++)
-//     {
-//         auto curr_time = high_resolution_clock::now();
-//         auto check = duration_cast<microseconds>(curr_time - start_time);
-//         if (check.count() >= Kernel.pcb_array[i].process_arival_time * 1000000)
-//         {
-//             ReadyQueue.push(Kernel.pcb_array[i]);
-//             // pthread_mutex_lock(&mutexSimulator);
-//             cout << "\nProcess arrived " << Kernel.pcb_array[i].process_name << " at " << check.count();
-//             // pthread_mutex_unlock(&mutexSimulator);
-//         }
-//         else
-//         {
-//             i--;
-//         }
-//     }
-// }
-
+void printFinal()
+{
+    cout << "\n\n";
+    cout << "# of Context Switches: " << contextCounts << "\n";
+    cout << "Total execution time: " << simulatorTime / 10.0 << "\n";
+    cout << "Total time spent in WAITING state: " << countWaiting / 10.0 << "\n";
+    cout << "Total time spent in READY state: " << countReady / 10.0 << "\n";
+}
 int main(int argc, char *argv[])
 {
     string outputfile;
@@ -588,19 +571,19 @@ void schedular(int i)
         if (algo_name == 'p')
         {
             // For priority algo change ready Queue
-            PCB tempArr[Kernel.no_of_processes];
+            PCB *tempArr = new PCB[Kernel.no_of_processes];
             for (int i = 0; i < Kernel.no_of_processes && !ReadyQueue.empty(); i++)
             {
-                tempArr[i] = ReadyQueue.front();
+                tempArr[i] = *ReadyQueue.front();
                 ReadyQueue.pop();
             }
             selectionSort(tempArr, Kernel.no_of_processes);
             for (int i = 0; i < Kernel.no_of_processes; i++)
             {
-                ReadyQueue.push(tempArr[i]);
+                ReadyQueue.push(&tempArr[i]);
             }
         }
-        curr = &ReadyQueue.front();
+        curr = ReadyQueue.front();
         ReadyQueue.pop();
         // set state ready
         curr->state = 3;
@@ -620,7 +603,7 @@ void wake_up(PCB *process)
     pthread_mutex_lock(&mutexReady);
     // process ready
     process->state = 2;
-    ReadyQueue.push(*process);
+    ReadyQueue.push(process);
 
     pthread_cond_signal(&mutexReadyAdded);
     pthread_mutex_unlock(&mutexReady);
@@ -646,7 +629,7 @@ void wake_up(PCB *process)
             }
         }
         pthread_mutex_unlock(&mutexCurrent);
-        if (!idleCPU || lowestPriority == process->process_priority)
+        if (!((idleCPU) || lowestPriority == process->process_priority))
         {
             cout << "Forced Preempt cpu: " << cpuID << endl;
             preemptForce(cpuID);
@@ -670,7 +653,7 @@ void preempt(int i)
     // set process to ready
     currentProcesses[i]->state = 2;
     // add to ready queue
-    ReadyQueue.push(*currentProcesses[i]);
+    ReadyQueue.push(currentProcesses[i]);
     // signal of adding to queue
     pthread_cond_signal(&mutexReadyAdded);
     // unlock for ready queue
@@ -682,6 +665,7 @@ void preempt(int i)
 }
 void yield(int i)
 {
+    // cout << "set yield" << endl;
     pthread_mutex_lock(&mutexCurrent);
     // set process to waiting
     currentProcesses[i]->state = 4;
