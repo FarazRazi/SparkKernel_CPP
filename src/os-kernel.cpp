@@ -46,6 +46,7 @@ int total_cpus = 0, timeslice = 0;
 int contextCounts = 0;
 int processCreated = 0;
 int processTerminated;
+string outputfile;
 
 auto overall_time = high_resolution_clock::now();
 
@@ -459,10 +460,19 @@ void printFinal()
     cout << "Total execution time: " << simulatorTime / 10.0 << "\n";
     cout << "Total time spent in WAITING state: " << countWaiting / 10.0 << "\n";
     cout << "Total time spent in READY state: " << countReady / 10.0 << "\n";
+    ofstream file;
+    file.open(outputfile, ios::app);
+    file << "\n--------------------------------------------------\n";
+    file << "algo: " << algo_name << " CPU: " << total_cpus << "\n";
+    file << "# of Context Switches: " << contextCounts << "\n";
+    file << "Total execution time: " << simulatorTime / 10.0 << "\n";
+    file << "Total time spent in WAITING state: " << countWaiting / 10.0 << "\n";
+    file << "Total time spent in READY state: " << countReady / 10.0 << "\n";
+    file << "--------------------------------------------------\n";
+    file.close();
 }
 int main(int argc, char *argv[])
 {
-    string outputfile;
     string inputfile = argv[1], ch = argv[3];
     total_cpus = stoi(argv[2]);
     if (ch[0] == 'r')
@@ -478,7 +488,6 @@ int main(int argc, char *argv[])
     }
 
     Kernel.file_handling(inputfile);
-    // initialize_ready();
     //  Kernel.show_pcb();
 
     pthread_mutex_init(&mutexReady, NULL);

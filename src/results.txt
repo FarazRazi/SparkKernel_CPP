@@ -1,0 +1,80 @@
+
+--------------------------------------------------
+algo: f CPU: 1
+# of Context Switches: 17
+Total execution time: 9.9
+Total time spent in WAITING state: 15.4
+Total time spent in READY state: 6
+--------------------------------------------------
+
+--------------------------------------------------
+algo: f CPU: 2
+# of Context Switches: 23
+Total execution time: 9.1
+Total time spent in WAITING state: 15.5
+Total time spent in READY state: 0.2
+--------------------------------------------------
+
+--------------------------------------------------
+algo: f CPU: 4
+# of Context Switches: 30
+Total execution time: 13.7
+Total time spent in WAITING state: 20.9
+Total time spent in READY state: 1
+--------------------------------------------------
+
+--------------------------------------------------
+algo: r CPU: 1
+# of Context Switches: 32
+Total execution time: 13.6
+Total time spent in WAITING state: 21.9
+Total time spent in READY state: 4
+--------------------------------------------------
+
+--------------------------------------------------
+algo: r CPU: 2
+# of Context Switches: 43
+Total execution time: 7.9
+Total time spent in WAITING state: 9.3
+Total time spent in READY state: 0.8
+--------------------------------------------------
+
+--------------------------------------------------
+algo: r CPU: 4
+# of Context Switches: 51
+Total execution time: 9.1
+Total time spent in WAITING state: 15
+Total time spent in READY state: 0.6
+--------------------------------------------------
+
+--------------------------------------------------
+algo: r CPU: 4
+# of Context Switches: 147
+Total execution time: 51.2
+Total time spent in WAITING state: 281.1
+Total time spent in READY state: 26.8
+--------------------------------------------------
+
+--------------------------------------------------
+algo: f CPU: 1
+# of Context Switches: 62
+Total execution time: 44
+Total time spent in WAITING state: 93.5
+Total time spent in READY state: 318.3
+--------------------------------------------------
+
+--------------------------------------------------
+algo: f CPU: 4
+# of Context Switches: 72
+Total execution time: 34.5
+Total time spent in WAITING state: 146
+Total time spent in READY state: 27
+--------------------------------------------------
+
+--------------------------------------------------
+algo: f CPU: 4
+# of Context Switches: 87
+Total execution time: 51.2
+Total time spent in WAITING state: 289.7
+Total time spent in READY state: 28.5
+--------------------------------------------------
