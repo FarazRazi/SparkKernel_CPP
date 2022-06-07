@@ -359,13 +359,13 @@ void simulateProcess(int i, PCB *cProc)
     // float t2 = simulatorTime - cProc->process_arival_time * 10;
     if (time > 0) // needs to run
     {
-        time--;
+        time -= 0.1;
         cProc->process_cpu_time = time;
         // For stopping a process
         cpus_array[i].preemptionTimer--;
         // cout << t2 << endl;
 
-        if (process_type = 'I' && cProc->process_IO_count > 0 && cProc->process_IO_stamps[cProc->process_IO_count - 1] == cProc->process_fixed_time - cProc->process_cpu_time)
+        if (process_type = 'I' && cProc->process_IO_count > 0 && cProc->process_IO_stamps[cProc->process_IO_count - 1] <= cProc->process_fixed_time - cProc->process_cpu_time)
         {
             // submit for I/O
             startIO(cProc);
